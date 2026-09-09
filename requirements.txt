@@ -1,0 +1,5 @@
+PyQt6>=6.0.0
+gTTS>=2.0.0
+pygame>=2.0.0
+janome>=0.4.0
+language-tool-python>=2.11.0
