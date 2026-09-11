@@ -3,6 +3,18 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
+
+class UI:
+    margins = (40, 20, 40, 20)
+    spacing = 10
+    title_font_size = 20
+    title_style = "font-size: 24px; font-weight: 800; color: #172033; padding: 4px;"
+    body_font_size = 14
+    kana_font_size = 60
+    button_min_height = 50
+    surface_style = "background: #f7f8fa; border: 1px solid #e2e8f0; border-radius: 24px; padding: 20px; color: #172033;"
+    option_style = "QPushButton { background: #ffffff; border: 1px solid #d9dee8; border-radius: 14px; color: #172033; padding: 8px; } QPushButton:hover { background: #edf2f7; border-color: #94a3b8; }"
+
 '''
 KanaPracticePage 模組負責顯示假名練習題目頁面。
 它會根據練習模式與難度顯示題目文字、選項按鈕或輸入欄，並更新分數。
@@ -20,45 +32,56 @@ class KanaPracticePage(QWidget):
 
     def init_ui(self):
         layout = QVBoxLayout()
-        layout.setSpacing(20)
-        layout.setContentsMargins(40, 20, 40, 20)
+        layout.setSpacing(UI.spacing)
+        layout.setContentsMargins(*UI.margins)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
         title = QLabel()
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont()
-        font.setPointSize(20)
+        font.setPointSize(UI.title_font_size)
         font.setBold(True)
         title.setFont(font)
+        title.setStyleSheet(UI.title_style)
         layout.addWidget(title)
+
+        direction_label = QLabel()
+        direction_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        direction_label.setStyleSheet(f"font-size: {UI.body_font_size}px; color: #718096; font-style: italic;")
+        layout.addWidget(direction_label)
         
         kana_label = QLabel()
         kana_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont()
-        font.setPointSize(80)
+        font.setPointSize(UI.kana_font_size)
         kana_label.setFont(font)
-        kana_label.setStyleSheet("border: 3px solid; padding: 20px;")
+        kana_label.setMinimumHeight(210)
+        kana_label.setStyleSheet(UI.surface_style)
         layout.addWidget(kana_label)
         
         score_label = QLabel()
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont()
-        font.setPointSize(16)
+        font.setPointSize(UI.body_font_size + 2)
         score_label.setFont(font)
+        score_label.setStyleSheet(f"font-size: {UI.body_font_size + 2}px; color: #172033; font-weight: bold;")
         layout.addWidget(score_label)
         
         self.options_container = QWidget()
         self.options_layout = QVBoxLayout()
         self.options_container.setLayout(self.options_layout)
+        self.options_container.setStyleSheet(UI.option_style)
         layout.addWidget(self.options_container)
         
         btn_return = QPushButton()
-        btn_return.setMinimumHeight(50)
+        btn_return.setMinimumHeight(UI.button_min_height)
         btn_return.clicked.connect(lambda: self.main_window.show_page("mode"))
         layout.addWidget(btn_return)
         
         self.setLayout(layout)
         
         self.title_label = title
+        self.direction_label = direction_label
         self.kana_label = kana_label
         self.score_label = score_label
         self.return_button = btn_return
@@ -67,20 +90,23 @@ class KanaPracticePage(QWidget):
 
     def update_texts(self):
         self.return_button.setText(self.i18n_system.get_text("common_btn_return"))
+        self.direction_label.setText(self._direction_text())
 
-    def start_practice(self, mode, difficulty):
-        self.kana_practice.set_mode(mode)
+    def _direction_text(self):
+        labels = {"h": "kana_hiragana", "k": "kana_katakana", "r": "kana_romaji"}
+        source = self.i18n_system.get_text(labels[self.kana_practice.source_type])
+        target = self.i18n_system.get_text(labels[self.kana_practice.target_type])
+        return f"{source}  →  {target}"
+
+    def start_practice(self, mode, difficulty, source_type=None, target_type=None):
+        if source_type is not None and target_type is not None:
+            self.kana_practice.set_types(source_type, target_type)
+        else:
+            self.kana_practice.set_mode(mode)
         self.kana_practice.set_difficulty(difficulty)
         self.kana_practice.reset_score()
-        
-        title_key = {
-            "RFH": "page_RFH_title",
-            "RFK": "page_RFK_title",
-            "HFR": "page_HFR_title",
-            "KFR": "page_KFR_title",
-            "KFH": "page_KFH_title"
-        }.get(mode, "page_RFH_title")
-        self.title_label.setText(self.i18n_system.get_text(title_key))
+        self.title_label.setText(self.i18n_system.get_text("page_kana_practice_title"))
+        self.direction_label.setText(self._direction_text())
         
         self._generate_question()
 
@@ -131,7 +157,7 @@ class KanaPracticePage(QWidget):
                         btn = QPushButton(options[idx])
                         btn.setMinimumHeight(70)
                         font = QFont()
-                        font.setPointSize(24)
+                        font.setPointSize(20)
                         btn.setFont(font)
                         btn.clicked.connect(lambda checked, opt=options[idx]: self._on_option_click(opt))
                         self.option_buttons.append(btn)

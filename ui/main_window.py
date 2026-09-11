@@ -1,6 +1,10 @@
 from PyQt6.QtWidgets import QMainWindow, QStackedWidget
 from PyQt6.QtCore import Qt
 
+
+class UI:
+    screen_size = (720, 512)
+
 '''
 MainWindow 模組負責整合各個頁面並管理主要視窗。
 這個模組會建立 QStackedWidget 作為中央元件，並提供頁面切換功能。
@@ -15,7 +19,7 @@ class MainWindow(QMainWindow):
         self.audio_player = audio_player
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
-        self.setMinimumSize(600, 500)
+        self.setMinimumSize(*UI.screen_size)
         self.pages = {}
         self.update_title()
 

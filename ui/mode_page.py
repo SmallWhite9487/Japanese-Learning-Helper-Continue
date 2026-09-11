@@ -7,6 +7,20 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLab
 from PyQt6.QtCore import Qt, QRect, QSize, QParallelAnimationGroup, QPropertyAnimation, QEasingCurve, QTimer, pyqtProperty
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPen, QBrush, QImage, QPixmap
 
+
+class UI:
+    mode_margins = (28, 8, 28, 24)
+    spacing = 10
+    control_spacing = 10
+    hero_title_font_size = 24
+    body_font_size = 14
+    text_primary = "#172033"
+    text_secondary = "#888888"
+    surface = "#ffffff"
+    surface_soft = "#f7f8fa"
+    navigation_size = (64, 108)
+    square_button_size = (52, 52)
+
 '''
 ModePage 模組負責顯示主要練習模式選擇頁面。
 使用者可在此頁面切換假名練習模式、動詞變化頁面、五十音表頁面或語言設定頁面。
@@ -16,6 +30,7 @@ class ModeArtwork(QWidget):
     """Small self-contained artwork for a mode card, drawn without external assets."""
 
     colors = {
+        "KANA": ("#e88b5d", "#fff1e8"),
         "RFH": ("#f08a5d", "#fff1e8"), "RFK": ("#5d9cec", "#eaf3ff"),
         "HFR": ("#61c0bf", "#e8fbfa"), "KFR": ("#9b8afb", "#f0edff"),
         "KFH": ("#f4b942", "#fff6df"), "VC": ("#e56b6f", "#fff0f0"),
@@ -213,37 +228,40 @@ class ModePage(QWidget):
 
     def init_ui(self):
         layout = QVBoxLayout()
-        layout.setContentsMargins(28, 8, 28, 24)
-        layout.setSpacing(10)
+        layout.setContentsMargins(*UI.mode_margins)
+        layout.setSpacing(UI.spacing)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         title = QLabel()
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setStyleSheet(
-            "font-size: 24px; font-weight: 800; color: #172033; "
-            "padding: 2px 0 2px; letter-spacing: 1px;"
+            f"font-size: {UI.hero_title_font_size}px; font-weight: 800; "
+            f"color: {UI.text_primary}; padding: 2px 0 2px; letter-spacing: 1px;"
         )
         layout.addWidget(title)
 
-        self.modes = ["RFH", "RFK", "HFR", "KFR", "KFH", "VC", "GC", "SP"]
+        self.modes = ["KANA", "VC", "GC", "SP"]
         self.icon_data = self._load_icon_data()
         self.current_index = 0
         self.is_animating = False
         self.carousel = QFrame()
         self.carousel.setMinimumHeight(340)
-        self.carousel.setStyleSheet("QFrame { background: #f7f8fa; border-radius: 28px; }")
+        self.carousel.setStyleSheet(f"QFrame {{ background: {UI.surface_soft}; border-radius: 28px; }}")
         carousel_layout = QHBoxLayout(self.carousel)
         carousel_layout.setContentsMargins(12, 18, 12, 18)
 
         self.previous_button = QPushButton("<")
         self.next_button = QPushButton(">")
         for button in (self.previous_button, self.next_button):
-            button.setFixedSize(64, 108)
-            button.setStyleSheet("QPushButton { background: #ffffff; border: 1px solid #e2e5ea; border-radius: 20px; color: #172033; font-size: 34px; font-weight: bold; } QPushButton:hover { background: #edf2f7; }")
+            button.setFixedSize(*UI.navigation_size)
+            button.setStyleSheet(
+                f"QPushButton {{ background: {UI.surface}; border: 1px solid #e2e5ea; "
+                f"border-radius: 20px; color: {UI.text_primary}; font-size: 34px; font-weight: bold; }} "
+                "QPushButton:hover { background: #edf2f7; }"
+            )
         self.previous_button.clicked.connect(lambda: self._navigate(-1))
         self.next_button.clicked.connect(lambda: self._navigate(1))
         carousel_layout.addWidget(self.previous_button)
-
         self.art_stage = QWidget()
         self.art_stage.setMinimumSize(280, 280)
         self.art_stage.setStyleSheet("background: transparent;")
@@ -253,9 +271,9 @@ class ModePage(QWidget):
 
         info_layout = QHBoxLayout()
         info_layout.setContentsMargins(0, 0, 0, 0)
-        info_layout.setSpacing(14)
+        info_layout.setSpacing(UI.control_spacing + 4)
         self.language_button = AnimatedIconButton()
-        self.language_button.setFixedSize(52, 52)
+        self.language_button.setFixedSize(*UI.square_button_size)
         self.language_button.setToolTip("Language")
         self.language_button.clicked.connect(self._cycle_language)
         info_layout.addWidget(self.language_button, 0, Qt.AlignmentFlag.AlignBottom)
@@ -264,22 +282,22 @@ class ModePage(QWidget):
         text_layout.setSpacing(2)
         self.mode_title = QLabel()
         self.mode_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.mode_title.setStyleSheet("font-size: 16px; color: #000000; font-weight: bold;")
+        self.mode_title.setStyleSheet(f"font-size: {UI.body_font_size + 2}px; color: #000000; font-weight: bold;")
         text_layout.addWidget(self.mode_title)
         self.mode_description = QLabel()
         self.mode_description.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.mode_description.setStyleSheet("font-size: 14px; color: #888888; font-style: italic;")
+        self.mode_description.setStyleSheet(f"font-size: {UI.body_font_size}px; color: {UI.text_secondary}; font-style: italic;")
         text_layout.addWidget(self.mode_description)
         info_layout.addLayout(text_layout, 1)
+
         self.language_spacer = QPushButton()
-        self.language_spacer.setFixedSize(52, 52)
+        self.language_spacer.setFixedSize(*UI.square_button_size)
         self.language_spacer.setEnabled(False)
         self.language_spacer.setStyleSheet("QPushButton { background: transparent; border: none; }")
         info_layout.addWidget(self.language_spacer, 0, Qt.AlignmentFlag.AlignBottom)
         layout.addLayout(info_layout)
 
         self.setLayout(layout)
-
         self.title_label = title
         self.current_art = None
         self._show_current_mode()
@@ -423,8 +441,8 @@ class ModePage(QWidget):
         if self.is_animating:
             return
         mode = self.modes[self.current_index]
-        if mode in ("RFH", "RFK", "HFR", "KFR", "KFH"):
-            self._go_to_difficulty(mode)
+        if mode == "KANA":
+            self._go_to_difficulty("KANA")
             return
         page_names = {"VC": "verb_conjugation", "GC": "chart", "SP": "sentence_parser"}
         self.main_window.show_page(page_names[mode])

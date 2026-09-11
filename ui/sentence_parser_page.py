@@ -8,6 +8,17 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
 
+class UI:
+    margins = (40, 20, 40, 20)
+    spacing = 15
+    control_spacing = 10
+    title_font_size = 20
+    input_font_size = 14
+    hint_font_size = 10
+    input_height = 50
+    button_height = 50
+
+
 class SentenceParserPage(QWidget):
     """SentenceParserPage 主要功能:
     1. 提供日文句子輸入欄位
@@ -28,8 +39,8 @@ class SentenceParserPage(QWidget):
     def init_ui(self):
         # 建立頁面主版面與所有 UI 元件
         layout = QVBoxLayout()
-        layout.setSpacing(15)
-        layout.setContentsMargins(40, 20, 40, 20)
+        layout.setSpacing(UI.spacing)
+        layout.setContentsMargins(*UI.margins)
         
         # 標題標籤
         title = QLabel()
@@ -90,30 +101,30 @@ class SentenceParserPage(QWidget):
         
         self.result_text = QTextEdit()
         self.result_text.setReadOnly(True)
+        self.result_text.setReadOnly(True)
         font = QFont()
         font.setFamily("Consolas")
         font.setPointSize(11)
         self.result_text.setFont(font)
         scroll.setWidget(self.result_text)
         layout.addWidget(scroll)
-        
+
         # 底部按鈕區域
         bottom_layout = QHBoxLayout()
-        bottom_layout.setSpacing(10)
-        
+        bottom_layout.setSpacing(UI.control_spacing)
         # 清空按鈕
         btn_clear = QPushButton()
-        btn_clear.setMinimumHeight(50)
+        btn_clear.setMinimumHeight(UI.button_height)
         btn_clear.clicked.connect(self._on_clear_clicked)
         bottom_layout.addWidget(btn_clear)
         
         # 返回按鈕
         btn_return = QPushButton()
-        btn_return.setMinimumHeight(50)
+        btn_return.setMinimumHeight(UI.button_height)
         btn_return.clicked.connect(lambda: self.main_window.show_page("mode"))
         bottom_layout.addWidget(btn_return)
         
-        layout.addLayout(bottom_layout)
+        font.setPointSize(UI.input_font_size)
         
         self.setLayout(layout)
         
@@ -129,7 +140,6 @@ class SentenceParserPage(QWidget):
         self.update_texts()
 
     def update_texts(self):
-        # 根據語言系統更新所有文字標籤
         self.title_label.setText(self.i18n_system.get_text("page_SP_title"))
         self.input_label.setText(self.i18n_system.get_text("page_SP_input"))
         self.hint_label.setText(self.i18n_system.get_text("page_SP_hint"))

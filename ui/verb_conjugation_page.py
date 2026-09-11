@@ -3,6 +3,20 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
+
+class UI:
+    margins = (40, 20, 40, 20)
+    spacing = 20
+    grid_spacing = 15
+    grid_margins = (20, 20, 20, 20)
+    title_font_size = 20
+    input_font_size = 24
+    hint_font_size = 12
+    label_font_size = 12
+    value_font_size = 16
+    input_height = 60
+    button_height = 50
+
 '''
 VerbConjugationPage 模組負責顯示日語動詞變化頁面。
 使用者輸入日語動詞後，會呼叫 VerbConjugator 解析並顯示不同的變化形態。
@@ -20,27 +34,27 @@ class VerbConjugationPage(QWidget):
     def init_ui(self):
         layout = QVBoxLayout()
         layout.setSpacing(20)
-        layout.setContentsMargins(40, 20, 40, 20)
+        layout.setContentsMargins(*UI.margins)
         
         title = QLabel()
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont()
-        font.setPointSize(20)
-        font.setBold(True)
+        layout.setSpacing(UI.spacing)
+        layout.setContentsMargins(*UI.margins)
         title.setFont(font)
         layout.addWidget(title)
         
         self.input_field = QLineEdit()
-        font = QFont()
+        font.setPointSize(UI.title_font_size)
         font.setPointSize(24)
         self.input_field.setFont(font)
         self.input_field.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.input_field.setMinimumHeight(60)
         self.input_field.textChanged.connect(self._on_input_changed)
-        layout.addWidget(self.input_field)
+        font.setPointSize(UI.input_font_size)
         
         hint = QLabel()
-        hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.input_field.setMinimumHeight(UI.input_height)
         font = QFont()
         font.setPointSize(12)
         hint.setFont(font)
@@ -48,8 +62,8 @@ class VerbConjugationPage(QWidget):
         
         self.conjugation_labels = []
         grid = QGridLayout()
-        grid.setSpacing(15)
-        grid.setContentsMargins(20, 20, 20, 20)
+        grid.setSpacing(UI.grid_spacing)
+        grid.setContentsMargins(*UI.grid_margins)
         
         positions = [
             (0, 0), (0, 1), (0, 2), (0, 3),
@@ -62,21 +76,21 @@ class VerbConjugationPage(QWidget):
             label_title = QLabel()
             label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
             font = QFont()
-            font.setPointSize(12)
+            font.setPointSize(UI.label_font_size)
             font.setBold(True)
             label_title.setFont(font)
             container.addWidget(label_title)
             
             label_value = QLabel("—")
             label_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            label_value.setMinimumHeight(50)
+            label_value.setMinimumHeight(UI.button_height)
             font = QFont()
-            font.setPointSize(16)
+            font.setPointSize(UI.value_font_size)
             label_value.setFont(font)
             label_value.setStyleSheet("border: 2px solid; padding: 10px;")
             container.addWidget(label_value)
             
-            self.conjugation_labels.append((label_title, label_value))
+            font.setPointSize(UI.value_font_size)
             grid.addLayout(container, row, col)
         
         layout.addLayout(grid)

@@ -13,6 +13,8 @@ class KanaPractice:
         self.current_answer = None
         self.current_options = []
         self.mode = "RFH"
+        self.source_type = "h"
+        self.target_type = "r"
         self.difficulty = "e"
 
     def reset_score(self):
@@ -26,6 +28,25 @@ class KanaPractice:
 
     def set_mode(self, mode):
         self.mode = mode
+        mode_axes = {
+            "RFH": ("h", "r"), "RFK": ("k", "r"),
+            "HFR": ("r", "h"), "KFR": ("r", "k"), "KFH": ("h", "k")
+        }
+        self.source_type, self.target_type = mode_axes.get(mode, ("h", "r"))
+
+    def set_types(self, source_type, target_type):
+        if source_type == target_type:
+            raise ValueError("Source and target types must be different")
+        self.source_type = source_type
+        self.target_type = target_type
+        self.mode = self._types_to_mode(source_type, target_type)
+
+    def _types_to_mode(self, source_type, target_type):
+        return {
+            ("h", "r"): "RFH", ("k", "r"): "RFK",
+            ("r", "h"): "HFR", ("r", "k"): "KFR",
+            ("h", "k"): "KFH", ("k", "h"): "KHF"
+        }.get((source_type, target_type), "RFH")
 
     def set_difficulty(self, difficulty):
         self.difficulty = difficulty
@@ -39,44 +60,18 @@ class KanaPractice:
             return 12
 
     def generate_question(self):
-        list_using = []
-        dict_using = {}
-        temp_index = 0
-
-        if self.mode == "RFH":
-            list_using = self.data_loader.get_hiragana_list()
-            dict_using = self.data_loader.get_hiragana_to_romaji()
-        elif self.mode == "RFK":
-            list_using = self.data_loader.get_katakana_list()
-            dict_using = self.data_loader.get_katakana_to_romaji()
-        elif self.mode == "HFR":
-            list_using = self.data_loader.get_romaji_list()
-            dict_using = self.data_loader.get_romaji_to_kana()
-            temp_index = 0
-        elif self.mode == "KFR":
-            list_using = self.data_loader.get_romaji_list()
-            dict_using = self.data_loader.get_romaji_to_kana()
-            temp_index = 1
-        elif self.mode == "KFH":
-            list_using = self.data_loader.get_hiragana_list()
-            dict_using = self.data_loader.get_hiragana_to_katakana()
+        list_using, answer_lookup = self._get_practice_data()
 
         answer = random.choice(list_using)
         self.current_answer = answer
 
         if self.difficulty != "h":
-            if self.mode in ("HFR", "KFR"):
-                correct = dict_using[answer][temp_index]
-            else:
-                correct = dict_using[answer]
+            correct = answer_lookup[answer]
 
             wrong_choices = []
             for t in list_using:
                 if t != answer:
-                    if self.mode in ("HFR", "KFR"):
-                        wrong_choices.append(dict_using[t][temp_index])
-                    else:
-                        wrong_choices.append(dict_using[t])
+                    wrong_choices.append(answer_lookup[t])
 
             count = self.get_options_count() - 1
             options = [correct] + random.sample(wrong_choices, count)
@@ -86,26 +81,8 @@ class KanaPractice:
         return answer
 
     def check_answer(self, user_answer):
-        dict_using = {}
-        temp_index = 0
-
-        if self.mode == "RFH":
-            dict_using = self.data_loader.get_hiragana_to_romaji()
-        elif self.mode == "RFK":
-            dict_using = self.data_loader.get_katakana_to_romaji()
-        elif self.mode == "HFR":
-            dict_using = self.data_loader.get_romaji_to_kana()
-            temp_index = 0
-        elif self.mode == "KFR":
-            dict_using = self.data_loader.get_romaji_to_kana()
-            temp_index = 1
-        elif self.mode == "KFH":
-            dict_using = self.data_loader.get_hiragana_to_katakana()
-
-        if self.mode in ("HFR", "KFR"):
-            real_answer = dict_using[self.current_answer][temp_index]
-        else:
-            real_answer = dict_using[self.current_answer]
+        _, answer_lookup = self._get_practice_data()
+        real_answer = answer_lookup[self.current_answer]
 
         is_correct = user_answer.strip() == real_answer
 
@@ -118,3 +95,28 @@ class KanaPractice:
 
     def get_current_options(self):
         return self.current_options
+
+    def _get_practice_data(self):
+        source_lists = {
+            "h": self.data_loader.get_hiragana_list(),
+            "k": self.data_loader.get_katakana_list(),
+            "r": self.data_loader.get_romaji_list(),
+        }
+        source_list = source_lists[self.source_type]
+        if self.source_type == "h" and self.target_type == "r":
+            lookup = self.data_loader.get_hiragana_to_romaji()
+        elif self.source_type == "k" and self.target_type == "r":
+            lookup = self.data_loader.get_katakana_to_romaji()
+        elif self.source_type == "r" and self.target_type in ("h", "k"):
+            values = self.data_loader.get_romaji_to_kana()
+            index = 0 if self.target_type == "h" else 1
+            lookup = {key: value[index] for key, value in values.items()}
+        elif self.source_type == "h" and self.target_type == "k":
+            lookup = self.data_loader.get_hiragana_to_katakana()
+        elif self.source_type == "k" and self.target_type == "h":
+            hira_to_kata = self.data_loader.get_hiragana_to_katakana()
+            lookup = {kata: hira for hira, kata in hira_to_kata.items()}
+        else:
+            raise ValueError("Unsupported kana practice direction")
+        valid = [(item, lookup[item]) for item in source_list if item in lookup]
+        return [item[0] for item in valid], dict(valid)

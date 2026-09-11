@@ -3,6 +3,14 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
+
+class UI:
+    margins = (20, 20, 20, 20)
+    spacing = 10
+    chart_spacing = 20
+    title_font_size = 20
+    button_height = 50
+
 '''
 ChartPage 模組負責顯示五十音表與對應讀音的頁面。
 它會從 DataLoader 取得平假名、片假名與羅馬字轉換資料，並以按鈕形式呈現。
@@ -20,13 +28,13 @@ class ChartPage(QWidget):
 
     def init_ui(self):
         layout = QVBoxLayout()
-        layout.setSpacing(10)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(UI.spacing)
+        layout.setContentsMargins(*UI.margins)
         
         title = QLabel()
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont()
-        font.setPointSize(20)
+        font.setPointSize(UI.title_font_size)
         font.setBold(True)
         title.setFont(font)
         layout.addWidget(title)
@@ -38,13 +46,13 @@ class ChartPage(QWidget):
         
         scroll_content = QWidget()
         self.scroll_layout = QVBoxLayout()
-        self.scroll_layout.setSpacing(20)
+        self.scroll_layout.setSpacing(UI.chart_spacing)
         scroll_content.setLayout(self.scroll_layout)
         scroll.setWidget(scroll_content)
         layout.addWidget(scroll)
         
         btn_return = QPushButton()
-        btn_return.setMinimumHeight(50)
+        btn_return.setMinimumHeight(UI.button_height)
         btn_return.clicked.connect(lambda: self.main_window.show_page("mode"))
         layout.addWidget(btn_return)
         
